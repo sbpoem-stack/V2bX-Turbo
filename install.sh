@@ -13,6 +13,11 @@ CYAN='\033[0;36m'
 PLAIN='\033[0m'
 BOLD='\033[1m'
 
+# 确保在管道运行 (curl | bash) 时正确接管终端键盘输入
+if [ -c /dev/tty ]; then
+    exec < /dev/tty 2>/dev/null || true
+fi
+
 [[ $EUID -ne 0 ]] && echo -e "${RED}[错误] 请使用 root 权限运行此脚本！(sudo -i)${PLAIN}" && exit 1
 
 ARCH=$(uname -m)
