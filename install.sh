@@ -178,51 +178,60 @@ EOF
     echo -e "${GREEN}====================================================================${PLAIN}"
 }
 
+auto_detect_node() {
+    local host="$1"
+    local key="$2"
+    local id="$3"
+    
+    echo -e "${YELLOW}[*] 正在连接面板 API 智能探测节点配置与协议类型...${PLAIN}"
+    
+    # 优先探测主流协议列表
+    local types=("vless" "v2ray" "shadowsocks" "trojan" "hysteria2" "hysteria" "tuic")
+    local detected_type=""
+
+    for t in "${types[@]}"; do
+        resp=$(curl -s -m 4 "${host}/api/v1/server/UniProxy/config?node_id=${id}&node_type=${t}&token=${key}" -H "Token: ${key}" 2>/dev/null)
+        if echo "$resp" | grep -q '"server_port"\|"port"\|"tls"\|"network"\|"routes"'; then
+            detected_type="$t"
+            echo -e "${GREEN}[✓] 智能识别成功！节点协议类型为: ${BOLD}${CYAN}${t}${PLAIN}"
+            break
+        elif echo "$resp" | grep -q "Invalid token"; then
+            echo -e "${RED}[错误] 通信密钥 (Token) 错误，面板拒绝访问！${PLAIN}"
+            break
+        fi
+    done
+
+    if [ -z "$detected_type" ]; then
+        echo -e "${YELLOW}[!] 面板未能返回明确协议标识，自动启用通用高性能协议模式 (v2ray/vless)。${PLAIN}"
+        detected_type="v2ray"
+    fi
+
+    echo "$detected_type"
+}
+
 config_wizard() {
     echo -e "\n${BOLD}${PURPLE}====================================================================${PLAIN}"
-    echo -e "${BOLD}${PURPLE}                 📝 节点对接快速配置向导                           ${PLAIN}"
+    echo -e "${BOLD}${PURPLE}          🤖 智能节点对接向导 (自动从面板拉取并补全配置)           ${PLAIN}"
     echo -e "${BOLD}${PURPLE}====================================================================${PLAIN}"
 
-    echo -e "\n${CYAN}[1/5] 请输入面板网址 (例如: https://api.paopao.cx):${PLAIN}"
+    echo -e "\n${CYAN}[1/3] 请输入面板网址 (例如: https://api.paopao.cx):${PLAIN}"
     read -r api_host
     api_host=${api_host:-"https://api.paopao.cx"}
+    # 移除末尾斜杠
+    api_host="${api_host%/}"
 
-    echo -e "\n${CYAN}[2/5] 请输入面板通信密钥 (API Key / Token):${PLAIN}"
+    echo -e "\n${CYAN}[2/3] 请输入面板通信密钥 (API Key / Token):${PLAIN}"
     read -r api_key
 
-    echo -e "\n${CYAN}[3/5] 请输入节点 ID (Node ID，纯数字，默认: 59):${PLAIN}"
+    echo -e "\n${CYAN}[3/3] 请输入节点 ID (Node ID，数字):${PLAIN}"
     read -r node_id
     node_id=${node_id:-59}
 
-    echo -e "\n${CYAN}[4/5] 请选择节点协议类型:${PLAIN}"
-    echo -e "  1. V2ray / VLESS / VMess (默认)"
-    echo -e "  2. Shadowsocks"
-    echo -e "  3. Trojan"
-    echo -e "  4. Hysteria 2"
-    echo -e "  5. TUIC"
-    echo -e "请输入编号 [1-5] (默认: 1):"
-    read -r node_type_choice
+    # 自动探测并补全信息
+    node_type=$(auto_detect_node "${api_host}" "${api_key}" "${node_id}")
+    core_type="sing"
 
-    case "$node_type_choice" in
-        2) node_type="shadowsocks" ;;
-        3) node_type="trojan" ;;
-        4) node_type="hysteria2" ;;
-        5) node_type="tuic" ;;
-        *) node_type="v2ray" ;;
-    esac
-    
-    echo -e "\n${CYAN}[5/5] 请选择核心类型:${PLAIN}"
-    echo -e "  1. sing-box (推荐，多协议高性能)"
-    echo -e "  2. xray"
-    echo -e "请输入编号 [1-2] (默认: 1):"
-    read -r core_choice
-
-    if [[ "$core_choice" == "2" ]]; then
-        core_type="xray"
-    else
-        core_type="sing"
-    fi
-
+    echo -e "${YELLOW}[*] 正在自动生成全套极限优化配置文件...${PLAIN}"
     cat > "${CONFIG_DIR}/config.json" << EOF
 {
   "Log": {
@@ -254,14 +263,17 @@ config_wizard() {
   ]
 }
 EOF
-    echo -e "\n${GREEN}[✓] 标准配置文件已成功写入: ${CONFIG_DIR}/config.json${PLAIN}"
-    echo -e "${YELLOW}[*] 正在为您重启 V2bX-Turbo 服务...${PLAIN}"
+    echo -e "${GREEN}[✓] 智能配置已成功生成: ${CONFIG_DIR}/config.json${PLAIN}"
+    echo -e "${YELLOW}[*] 正在重启并验证 V2bX-Turbo 服务...${PLAIN}"
     systemctl restart V2bX >/dev/null 2>&1 || true
-    sleep 1
+    sleep 2
     if systemctl is-active --quiet V2bX; then
-        echo -e "${GREEN}[✓] V2bX-Turbo 服务已成功运行！${PLAIN}"
+        echo -e "${GREEN}====================================================================${PLAIN}"
+        echo -e "${GREEN}   🎉 V2bX-Turbo 节点已成功上线并全速运行！${PLAIN}"
+        echo -e "${CYAN}   - 协议类型: ${BOLD}${node_type}${PLAIN} | 核心: ${BOLD}sing-box (BBR Turbo 加速)${PLAIN}"
+        echo -e "${GREEN}====================================================================${PLAIN}"
     else
-        echo -e "${YELLOW}[!] 服务未能成功启动，请使用 v2bx log 查看原因。${PLAIN}"
+        echo -e "${RED}[!] 节点启动异常，请使用 v2bx log 查看具体日志。${PLAIN}"
     fi
 }
 
