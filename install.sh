@@ -138,9 +138,9 @@ EOF
     systemctl daemon-reload
     systemctl enable V2bX >/dev/null 2>&1
 
-    # 自动执行 BBR 极限调优 (直接静默注入)
+    # 自动执行 BBR 极限调优 (直接静默注入，带超时防卡死保护)
     echo -e "${GREEN}[*] 正在为服务器自动注入 BBR Turbo 极限网络参数...${PLAIN}"
-    modprobe tcp_bbr 2>/dev/null || true
+    timeout 2 modprobe tcp_bbr >/dev/null 2>&1 || true
     cat > /etc/sysctl.d/99-v2bx-bbr-turbo.conf << 'EOF'
 net.core.default_qdisc = fq
 net.ipv4.tcp_congestion_control = bbr
@@ -166,7 +166,7 @@ net.ipv4.tcp_mtu_probing = 1
 net.ipv4.tcp_window_scaling = 1
 fs.file-max = 2097152
 EOF
-    sysctl --system >/dev/null 2>&1 || sysctl -p /etc/sysctl.d/99-v2bx-bbr-turbo.conf >/dev/null 2>&1
+    timeout 3 sysctl -p /etc/sysctl.d/99-v2bx-bbr-turbo.conf >/dev/null 2>&1 || true
 
     cat > /etc/security/limits.d/99-v2bx-limits.conf << 'EOF'
 * soft nofile 1048576
@@ -191,7 +191,7 @@ EOF
         echo -e "${GREEN}[✓] 检测到已有配置文件: ${CONFIG_DIR}/config.json，保持不变。${PLAIN}"
     fi
 
-    systemctl restart V2bX
+    systemctl restart V2bX >/dev/null 2>&1 || true
     echo -e "${GREEN}====================================================================${PLAIN}"
     echo -e "${GREEN}   🎉 V2bX-Turbo 极速定制版已成功安装并启动！${PLAIN}"
     echo -e "${CYAN}   - 配置文件路径: ${CONFIG_DIR}/config.json${PLAIN}"
@@ -201,13 +201,18 @@ EOF
 
 config_wizard() {
     echo -e "\n${BOLD}${PURPLE}--- 节点对接快速配置向导 ---${PLAIN}"
-    read -rp "1. 请输入面板类型 [可选: NewV2board / V2board / SSpanel / Xboard] (默认: Xboard): " api_host_type
+    local TTY_DEV="/dev/tty"
+    if [ ! -c /dev/tty ]; then
+        TTY_DEV="/dev/stdin"
+    fi
+
+    read -rp "1. 请输入面板类型 [可选: NewV2board / V2board / SSpanel / Xboard] (默认: Xboard): " api_host_type < ${TTY_DEV}
     api_host_type=${api_host_type:-"Xboard"}
 
-    read -rp "2. 请输入面板网址 (例如: https://my-panel.com): " api_host
-    read -rp "3. 请输入面板通信密钥 (API Key / Token): " api_key
-    read -rp "4. 请输入节点 ID (Node ID，数字): " node_id
-    read -rp "5. 请选择核心类型 [1: sing-box (推荐) / 2: xray] (默认: 1): " core_choice
+    read -rp "2. 请输入面板网址 (例如: https://my-panel.com): " api_host < ${TTY_DEV}
+    read -rp "3. 请输入面板通信密钥 (API Key / Token): " api_key < ${TTY_DEV}
+    read -rp "4. 请输入节点 ID (Node ID，数字): " node_id < ${TTY_DEV}
+    read -rp "5. 请选择核心类型 [1: sing-box (推荐) / 2: xray] (默认: 1): " core_choice < ${TTY_DEV}
     
     if [[ "$core_choice" == "2" ]]; then
         core_type="xray"
