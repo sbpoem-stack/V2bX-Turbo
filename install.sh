@@ -200,17 +200,29 @@ EOF
 }
 
 config_wizard() {
-    echo -e "\n${BOLD}${PURPLE}--- 节点对接快速配置向导 ---${PLAIN}"
-    local TTY_DEV="/dev/tty"
-    if [ ! -c /dev/tty ]; then
-        TTY_DEV="/dev/stdin"
-    fi
+    echo -e "\n${BOLD}${PURPLE}====================================================================${PLAIN}"
+    echo -e "${BOLD}${PURPLE}                 📝 节点对接快速配置向导                           ${PLAIN}"
+    echo -e "${BOLD}${PURPLE}====================================================================${PLAIN}"
 
-    read -rp "1. 请输入面板网址 (例如: https://api.paopao.cx): " api_host < ${TTY_DEV}
-    read -rp "2. 请输入面板通信密钥 (API Key / Token): " api_key < ${TTY_DEV}
-    read -rp "3. 请输入节点 ID (Node ID，数字): " node_id < ${TTY_DEV}
-    read -rp "4. 请选择节点协议类型 [1: V2ray/VLESS/VMess (默认) / 2: Shadowsocks / 3: Trojan / 4: Hysteria2 / 5: TUIC]: " node_type_choice < ${TTY_DEV}
-    read -rp "5. 请选择核心类型 [1: sing-box (推荐) / 2: xray] (默认: 1): " core_choice < ${TTY_DEV}
+    echo -e "\n${CYAN}[1/5] 请输入面板网址 (例如: https://api.paopao.cx):${PLAIN}"
+    read -r api_host
+    api_host=${api_host:-"https://api.paopao.cx"}
+
+    echo -e "\n${CYAN}[2/5] 请输入面板通信密钥 (API Key / Token):${PLAIN}"
+    read -r api_key
+
+    echo -e "\n${CYAN}[3/5] 请输入节点 ID (Node ID，纯数字，默认: 59):${PLAIN}"
+    read -r node_id
+    node_id=${node_id:-59}
+
+    echo -e "\n${CYAN}[4/5] 请选择节点协议类型:${PLAIN}"
+    echo -e "  1. V2ray / VLESS / VMess (默认)"
+    echo -e "  2. Shadowsocks"
+    echo -e "  3. Trojan"
+    echo -e "  4. Hysteria 2"
+    echo -e "  5. TUIC"
+    echo -e "请输入编号 [1-5] (默认: 1):"
+    read -r node_type_choice
 
     case "$node_type_choice" in
         2) node_type="shadowsocks" ;;
@@ -220,6 +232,12 @@ config_wizard() {
         *) node_type="v2ray" ;;
     esac
     
+    echo -e "\n${CYAN}[5/5] 请选择核心类型:${PLAIN}"
+    echo -e "  1. sing-box (推荐，多协议高性能)"
+    echo -e "  2. xray"
+    echo -e "请输入编号 [1-2] (默认: 1):"
+    read -r core_choice
+
     if [[ "$core_choice" == "2" ]]; then
         core_type="xray"
     else
@@ -246,7 +264,7 @@ config_wizard() {
       "Core": "${core_type}",
       "ApiHost": "${api_host}",
       "ApiKey": "${api_key}",
-      "NodeID": ${node_id:-1},
+      "NodeID": ${node_id},
       "NodeType": "${node_type}",
       "Timeout": 30,
       "ListenIP": "0.0.0.0",
@@ -257,7 +275,15 @@ config_wizard() {
   ]
 }
 EOF
-    echo -e "${GREEN}[✓] 标准配置文件已生成: ${CONFIG_DIR}/config.json${PLAIN}"
+    echo -e "\n${GREEN}[✓] 标准配置文件已成功写入: ${CONFIG_DIR}/config.json${PLAIN}"
+    echo -e "${YELLOW}[*] 正在为您重启 V2bX-Turbo 服务...${PLAIN}"
+    systemctl restart V2bX >/dev/null 2>&1 || true
+    sleep 1
+    if systemctl is-active --quiet V2bX; then
+        echo -e "${GREEN}[✓] V2bX-Turbo 服务已成功运行！${PLAIN}"
+    else
+        echo -e "${YELLOW}[!] 服务未能成功启动，请使用 v2bx log 查看原因。${PLAIN}"
+    fi
 }
 
 run_bbr() {
