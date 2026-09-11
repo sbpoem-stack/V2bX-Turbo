@@ -308,18 +308,18 @@ esac
 # 交互主菜单
 while true; do
     show_menu
-    read -rp "请输入选项编号 [0-8]: " opt
+    read -rp "请输入选项编号 [0-9] (输入后按回车): " opt
     case "$opt" in
         1)
             install_v2bx
-            echo -e "\n按任意键返回主菜单..."
-            read -n 1 -s -r
+            echo -e "\n按回车键返回主菜单..."
+            read -r
             ;;
         2)
             config_wizard
-            systemctl restart V2bX
-            echo -e "\n按任意键返回主菜单..."
-            read -n 1 -s -r
+            systemctl restart V2bX >/dev/null 2>&1 || true
+            echo -e "\n按回车键返回主菜单..."
+            read -r
             ;;
         3)
             systemctl start V2bX
@@ -358,7 +358,7 @@ while true; do
             exit 0
             ;;
         *)
-            echo -e "${RED}[错误] 无效选项！${PLAIN}"
+            echo -e "${RED}[错误] 无效选项: '${opt}'${PLAIN}"
             sleep 1
             ;;
     esac
