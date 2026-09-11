@@ -56,7 +56,8 @@ show_menu() {
     echo -e "${GREEN} 5. 🔄 重启 V2bX-Turbo${PLAIN}"
     echo -e "${GREEN} 6. 📜 查看 运行实时日志${PLAIN}"
     echo -e "${GREEN} 7. 🏎️ 开启 / 检测 BBR Turbo 极限网络加速${PLAIN}"
-    echo -e "${GREEN} 8. ❌ 卸载 V2bX-Turbo${PLAIN}"
+    echo -e "${GREEN} 8. 📊 实时性能监控 (CPU / 内存 / 并发连接 / 错误捕获)${PLAIN}"
+    echo -e "${GREEN} 9. ❌ 卸载 V2bX-Turbo${PLAIN}"
     echo -e "${GREEN} 0. 退出脚本${PLAIN}"
     echo -e "${CYAN}====================================================================${PLAIN}"
 }
@@ -286,6 +287,13 @@ while true; do
             run_bbr
             ;;
         8)
+            if [ -f "${INSTALL_DIR}/monitor.sh" ]; then
+                bash "${INSTALL_DIR}/monitor.sh"
+            else
+                bash <(curl -fsSL "https://raw.githubusercontent.com/sbpoem-stack/V2bX-Turbo/main/monitor.sh")
+            fi
+            ;;
+        9)
             uninstall_v2bx
             break
             ;;
