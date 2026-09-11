@@ -1,89 +1,65 @@
-# V2bX
+# 🚀 V2bX-Turbo 极速定制版 (High-Performance Proxy Backend)
 
-[![](https://img.shields.io/badge/TgChat-UnOfficialV2Board%E4%BA%A4%E6%B5%81%E7%BE%A4-green)](https://t.me/unofficialV2board)
-[![](https://img.shields.io/badge/TgChat-YuzukiProjects%E4%BA%A4%E6%B5%81%E7%BE%A4-blue)](https://t.me/YuzukiProjects)
+<p align="center">
+  <b>融合 Linux 内核 BBR Turbo 极限加速与 Sing-box / Xray 高并发调优的专属 V2bX 增强版</b>
+</p>
 
-A V2board node server based on multi core, modified from XrayR.  
-一个基于多种内核的V2board节点服务端，修改自XrayR，支持V2ay,Trojan,Shadowsocks协议。
+---
 
-**注意： 本项目需要搭配[修改版V2board](https://github.com/wyx2685/v2board)**
+## 🌟 核心优化与特性
 
-## 特点
+1. **🏎️ 原生集成 BBR Turbo 极限拥塞控制与全栈内核调优**
+   - 突破 64MB BDP（带宽时延积）长肥网络大窗口，彻底跑满 1G~10Gbps 国际大带宽。
+   - 针对 **Hysteria 2 / TUIC v5 / QUIC** 等 UDP 协议大幅提升读写缓冲，杜绝突发丢包卡顿。
+   - 自动适配 **x86_64** 与 **ARM64**（甲骨文 ARM、AWS Graviton 等）架构。
 
-* 永久开源且免费。
-* 支持Vmess/Vless, Trojan， Shadowsocks, Hysteria1/2多种协议。
-* 支持Vless和XTLS等新特性。
-* 支持单实例对接多节点，无需重复启动。
-* 支持限制在线IP。
-* 支持限制Tcp连接数。
-* 支持节点端口级别、用户级别限速。
-* 配置简单明了。
-* 修改配置自动重启实例。
-* 支持多种内核，易扩展。
-* 支持条件编译，可仅编译需要的内核。
+2. **⚡ Go Runtime 运行时高并发与内存防抖调优**
+   - 优化 GC 回收策略与内存分配，降低上万并发连接下的 GC 停顿与延迟抖动。
+   - 默认解锁系统级 **1,048,576** 文件句柄与 65535 连接队列，告别 `too many open files` 报错。
 
-## 功能介绍
+3. **🛠️ 极速安装与管理工具箱**
+   - 支持一键安装、更新、快捷菜单管理（`v2bx`、`v2bx start`、`v2bx restart`、`v2bx log`、`v2bx bbr`）。
+   - 内置交互式面板对接向导（无缝对接 Xboard / V2board / SSPanel 等）。
 
-| 功能        | v2ray | trojan | shadowsocks | hysteria1/2 |
-|-----------|-------|--------|-------------|----------|
-| 自动申请tls证书 | √     | √      | √           | √        |
-| 自动续签tls证书 | √     | √      | √           | √        |
-| 在线人数统计    | √     | √      | √           | √        |
-| 审计规则      | √     | √      | √           | √         |
-| 自定义DNS    | √     | √      | √           | √        |
-| 在线IP数限制   | √     | √      | √           | √        |
-| 连接数限制     | √     | √      | √           | √         |
-| 跨节点IP数限制  |√      |√       |√            |√          |
-| 按照用户限速    | √     | √      | √           | √         |
-| 动态限速(未测试) | √     | √      | √           | √         |
+---
 
-## TODO
+## 🚀 一键安装与管理
 
-- [ ] 重新实现动态限速
-- [ ] 完善使用文档
+在您的 Linux 服务器（Debian / Ubuntu / CentOS / AlmaLinux / Rocky 等）直接复制并执行：
 
-## 软件安装
-
-### 一键安装
-
-```
-wget -N https://raw.githubusercontent.com/wyx2685/V2bX-script/master/install.sh && bash install.sh
+```bash
+# 🌟 一键极速安装 / 打开管理菜单
+bash <(curl -fsSL https://raw.githubusercontent.com/sbpoem-stack/V2bX-Turbo/main/install.sh)
 ```
 
-### 手动安装
-
-[手动安装教程](https://v2bx.v-50.me/v2bx/v2bx-xia-zai-he-an-zhuang/install/manual)
-
-## 构建
-``` bash
-# 通过-tags选项指定要编译的内核， 可选 xray， sing, hysteria2
-GOEXPERIMENT=jsonv2 go build -v -o build_assets/V2bX -tags "sing xray hysteria2 with_quic with_grpc with_utls with_wireguard with_acme with_gvisor" -trimpath -ldflags "-X 'github.com/InazumaV/V2bX/cmd.version=$version' -s -w -buildid="
+或使用 CDN 镜像：
+```bash
+bash <(curl -fsSL https://fastly.jsdelivr.net/gh/sbpoem-stack/V2bX-Turbo@main/install.sh)
 ```
 
-## 配置文件及详细使用教程
+---
 
-[详细使用教程](https://v2bx.v-50.me/)
+## 📋 常用快捷指令
 
-## 免责声明
+| 命令 | 描述 |
+| :--- | :--- |
+| `v2bx` | 打开 V2bX-Turbo 交互式管理主菜单 |
+| `v2bx start` | 启动 V2bX-Turbo 后端服务 |
+| `v2bx stop` | 停止 V2bX-Turbo 后端服务 |
+| `v2bx restart` | 重启 V2bX-Turbo 后端服务 |
+| `v2bx log` | 实时追踪查看运行日志 |
+| `v2bx bbr` | 一键调优 / 切换 BBR Turbo 极限网络加速 |
 
-* 此项目用于本人自用，因此本人不能保证向后兼容性。
-* 由于本人能力有限，不能保证所有功能的可用性，如果出现问题请在Issues反馈。
-* 本人不对任何人使用本项目造成的任何后果承担责任。
-* 本人比较多变，因此本项目可能会随想法或思路的变动随性更改项目结构或大规模重构代码，若不能接受请勿使用。
+---
 
-## 赞助
+## ⚙️ 配置文件路径
 
-[赞助链接](https://v-50.me/)
+- **主配置文件**：`/etc/V2bX/config.json`
+- **程序安装目录**：`/usr/local/V2bX/`
+- **系统服务单元**：`/etc/systemd/system/V2bX.service`
 
-## Thanks
+---
 
-* [Project X](https://github.com/XTLS/)
-* [V2Fly](https://github.com/v2fly)
-* [VNet-V2ray](https://github.com/ProxyPanel/VNet-V2ray)
-* [Air-Universe](https://github.com/crossfw/Air-Universe)
-* [XrayR](https://github.com/XrayR/XrayR)
-* [sing-box](https://github.com/SagerNet/sing-box)
+## 📄 开源协议
 
-## Stars 增长记录
-
-[![Stargazers over time](https://starchart.cc/wyx2685/V2bX.svg)](https://starchart.cc/wyx2685/V2bX)
+本项目基于原版 [V2bX](https://github.com/wyx2685/V2bX) 架构优化定制，遵循 [GPL-3.0 License](LICENSE) 开源协议。

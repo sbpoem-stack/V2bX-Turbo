@@ -62,7 +62,9 @@ func serverHandle(_ *cobra.Command, _ []string) {
 		log.SetOutput(f)
 	}
 	limiter.Init()
-	log.Info("Start V2bX...")
+	// Runtime Performance Tuning for High-Concurrency Long-Fat Networks
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	log.Info("🚀 V2bX-Turbo Engine Initializing (High-Concurrency & BBR Optimized)...")
 	vc, err := vCore.NewCore(c.CoresConfig)
 	if err != nil {
 		log.WithField("err", err).Error("new core failed")

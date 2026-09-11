@@ -7,9 +7,9 @@ import (
 )
 
 var (
-	version  = "TempVersion" //use ldflags replace
-	codename = "V2bX"
-	intro    = "A V2board backend based on multi core"
+	version  = "Turbo-v1.0.0"
+	codename = "V2bX-Turbo"
+	intro    = "High-Performance Multi-Core Proxy Backend with BBR Extreme Acceleration"
 )
 
 var versionCommand = cobra.Command{
@@ -26,15 +26,13 @@ func init() {
 
 func showVersion() {
 	fmt.Println(` 
-  _/      _/    _/_/    _/        _/      _/   
- _/      _/  _/    _/  _/_/_/      _/  _/      
-_/      _/      _/    _/    _/      _/         
- _/  _/      _/      _/    _/    _/  _/        
-  _/      _/_/_/_/  _/_/_/    _/      _/        
-                                                `)
+  ██╗   ██╗██████╗ ██████╗ ██╗  ██╗    ████████╗██╗   ██╗██████╗ ██████╗  ██████╗ 
+  ██║   ██║╚════██╗██╔══██╗╚██╗██╔╝    ╚══██╔══╝██║   ██║██╔══██╗██╔══██╗██╔═══██╗
+  ██║   ██║ █████╔╝██████╔╝ ╚███╔╝        ██║   ██║   ██║██████╔╝██████╔╝██║   ██║
+  ╚██╗ ██╔╝██╔═══╝ ██╔══██╗ ██╔██╗        ██║   ██║   ██║██╔══██╗██╔══██╗██║   ██║
+   ╚████╔╝ ███████╗██████╔╝██╔╝ ██╗       ██║   ╚██████╔╝██║  ██║██████╔╝╚██████╔╝
+    ╚═══╝  ╚══════╝╚═════╝ ╚═╝  ╚═╝       ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚═════╝  ╚═════╝ 
+    `)
 	fmt.Printf("%s %s (%s) \n", codename, version, intro)
-	//fmt.Printf("Supported cores: %s\n", strings.Join(vCore.RegisteredCore(), ", "))
-	// Warning
-	//fmt.Println(Warn("This version need V2board version >= 1.7.0."))
-	//fmt.Println(Warn("The version have many changed for config, please check your config file"))
+	fmt.Println("🚀 Powered by sbpoem-stack & BBR Turbo Optimization")
 }
