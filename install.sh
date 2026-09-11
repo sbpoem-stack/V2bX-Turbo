@@ -133,14 +133,53 @@ EOF
     systemctl daemon-reload
     systemctl enable V2bX >/dev/null 2>&1
 
-    # 自动执行 BBR 极限调优
+    # 自动执行 BBR 极限调优 (直接静默注入)
     echo -e "${GREEN}[*] 正在为服务器自动注入 BBR Turbo 极限网络参数...${PLAIN}"
-    if [ -f "${INSTALL_DIR}/bbr_turbo.sh" ]; then
-        bash "${INSTALL_DIR}/bbr_turbo.sh" <<< "4" >/dev/null 2>&1 || true
-    fi
+    modprobe tcp_bbr 2>/dev/null || true
+    cat > /etc/sysctl.d/99-v2bx-bbr-turbo.conf << 'EOF'
+net.core.default_qdisc = fq
+net.ipv4.tcp_congestion_control = bbr
+net.core.rmem_default = 262144
+net.core.wmem_default = 262144
+net.core.rmem_max = 67108864
+net.core.wmem_max = 67108864
+net.core.optmem_max = 2048576
+net.ipv4.tcp_rmem = 4096 1048576 67108864
+net.ipv4.tcp_wmem = 4096 1048576 67108864
+net.ipv4.udp_rmem_min = 16384
+net.ipv4.udp_wmem_min = 16384
+net.core.netdev_max_backlog = 100000
+net.core.somaxconn = 65535
+net.ipv4.tcp_max_syn_backlog = 3240000
+net.ipv4.tcp_max_tw_buckets = 2000000
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.tcp_fin_timeout = 15
+net.ipv4.tcp_slow_start_after_idle = 0
+net.ipv4.tcp_notsent_lowat = 16384
+net.ipv4.tcp_fastopen = 3
+net.ipv4.tcp_mtu_probing = 1
+net.ipv4.tcp_window_scaling = 1
+fs.file-max = 2097152
+EOF
+    sysctl --system >/dev/null 2>&1 || sysctl -p /etc/sysctl.d/99-v2bx-bbr-turbo.conf >/dev/null 2>&1
+
+    cat > /etc/security/limits.d/99-v2bx-limits.conf << 'EOF'
+* soft nofile 1048576
+* hard nofile 1048576
+* soft nproc 524288
+* hard nproc 524288
+root soft nofile 1048576
+root hard nofile 1048576
+root soft nproc 524288
+root hard nproc 524288
+EOF
+    echo -e "${GREEN}[✓] BBR Turbo 极限网络参数已成功注入！${PLAIN}"
 
     # 检查默认配置是否存在
     if [ ! -f "${CONFIG_DIR}/config.json" ]; then
+        if [ -f "${INSTALL_DIR}/config.json" ]; then
+            cp -f "${INSTALL_DIR}/config.json" "${CONFIG_DIR}/config.json"
+        fi
         echo -e "${YELLOW}[*] 首次安装，正在引导生成基础配置文件...${PLAIN}"
         config_wizard
     else
