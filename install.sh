@@ -13,11 +13,6 @@ CYAN='\033[0;36m'
 PLAIN='\033[0m'
 BOLD='\033[1m'
 
-# 确保在管道运行 (curl | bash) 时正确接管终端键盘输入
-if [ -c /dev/tty ]; then
-    exec < /dev/tty 2>/dev/null || true
-fi
-
 [[ $EUID -ne 0 ]] && echo -e "${RED}[错误] 请使用 root 权限运行此脚本！(sudo -i)${PLAIN}" && exit 1
 
 ARCH=$(uname -m)
@@ -39,9 +34,6 @@ case "${ARCH}" in
         exit 1
         ;;
 esac
-
-GITHUB_RAW="https://raw.githubusercontent.com/sbpoem-stack/V2bX-Turbo/main"
-CDN_RAW="https://fastly.jsdelivr.net/gh/sbpoem-stack/V2bX-Turbo@main"
 
 INSTALL_DIR="/usr/local/V2bX"
 CONFIG_DIR="/etc/V2bX"
@@ -78,9 +70,9 @@ get_status() {
 install_v2bx() {
     echo -e "${YELLOW}[*] 正在安装基础依赖组件 (curl, wget, tar, jq)...${PLAIN}"
     if command -v apt-get >/dev/null 2>&1; then
-        apt-get update && apt-get install -y curl wget tar jq ca-certificates
+        apt-get update && apt-get install -y curl wget tar jq ca-certificates unzip
     elif command -v yum >/dev/null 2>&1; then
-        yum install -y curl wget tar jq ca-certificates
+        yum install -y curl wget tar jq ca-certificates unzip
     fi
 
     echo -e "${YELLOW}[*] 正在创建工作目录...${PLAIN}"
@@ -100,20 +92,11 @@ install_v2bx() {
     fi
 
     echo -e "${YELLOW}[*] 解压并安装程序...${PLAIN}"
-    if command -v unzip >/dev/null 2>&1; then
-        unzip -o /tmp/V2bX.zip -d "${INSTALL_DIR}"
-    else
-        apt-get install -y unzip 2>/dev/null || yum install -y unzip 2>/dev/null
-        unzip -o /tmp/V2bX.zip -d "${INSTALL_DIR}"
-    fi
+    unzip -o /tmp/V2bX.zip -d "${INSTALL_DIR}"
     chmod +x "${INSTALL_DIR}/V2bX"
     ln -sf "${INSTALL_DIR}/V2bX" /usr/bin/v2bx
     ln -sf "${INSTALL_DIR}/V2bX" /usr/bin/V2bX
     rm -f /tmp/V2bX.zip
-
-    # 下载 BBR Turbo 脚本至本地
-    curl -fsSL "https://raw.githubusercontent.com/sbpoem-stack/bbr-turbo/main/bbr_turbo.sh" -o "${INSTALL_DIR}/bbr_turbo.sh" 2>/dev/null
-    chmod +x "${INSTALL_DIR}/bbr_turbo.sh" 2>/dev/null
 
     # 写入 systemd 服务单元
     echo -e "${YELLOW}[*] 配置 Systemd 守护进程...${PLAIN}"
@@ -138,7 +121,7 @@ EOF
     systemctl daemon-reload
     systemctl enable V2bX >/dev/null 2>&1
 
-    # 自动执行 BBR 极限调优 (直接静默注入，带超时防卡死保护)
+    # 自动执行 BBR 极限调优 (直接静默注入)
     echo -e "${GREEN}[*] 正在为服务器自动注入 BBR Turbo 极限网络参数...${PLAIN}"
     timeout 2 modprobe tcp_bbr >/dev/null 2>&1 || true
     cat > /etc/sysctl.d/99-v2bx-bbr-turbo.conf << 'EOF'
@@ -182,10 +165,6 @@ EOF
 
     # 检查默认配置是否存在
     if [ ! -f "${CONFIG_DIR}/config.json" ]; then
-        if [ -f "${INSTALL_DIR}/config.json" ]; then
-            cp -f "${INSTALL_DIR}/config.json" "${CONFIG_DIR}/config.json"
-        fi
-        echo -e "${YELLOW}[*] 首次安装，正在引导生成基础配置文件...${PLAIN}"
         config_wizard
     else
         echo -e "${GREEN}[✓] 检测到已有配置文件: ${CONFIG_DIR}/config.json，保持不变。${PLAIN}"
@@ -287,11 +266,7 @@ EOF
 }
 
 run_bbr() {
-    if [ -f "${INSTALL_DIR}/bbr_turbo.sh" ]; then
-        bash "${INSTALL_DIR}/bbr_turbo.sh"
-    else
-        bash <(curl -fsSL "https://raw.githubusercontent.com/sbpoem-stack/bbr-turbo/main/bbr_turbo.sh")
-    fi
+    bash <(curl -fsSL "https://raw.githubusercontent.com/sbpoem-stack/bbr-turbo/main/bbr_turbo.sh")
 }
 
 uninstall_v2bx() {
@@ -299,7 +274,7 @@ uninstall_v2bx() {
     if [[ "$choice" =~ ^[Yy]$ ]]; then
         systemctl stop V2bX 2>/dev/null
         systemctl disable V2bX 2>/dev/null
-        rm -rf "${INSTALL_DIR}" "${CONFIG_DIR}" "${SERVICE_FILE}" /usr/bin/v2bx /usr/bin/V2bX
+        rm -rf "${INSTALL_DIR}" "${CONFIG_DIR}" "${SERVICE_FILE}" /usr/bin/v2bx /usr/bin/V2bX install.sh*
         systemctl daemon-reload
         echo -e "${GREEN}[✓] V2bX-Turbo 已彻底从服务器卸载！${PLAIN}"
     else
@@ -334,7 +309,7 @@ esac
 # 交互主菜单
 while true; do
     show_menu
-    read -rp "请输入选项编号 [0-9] (输入后按回车): " opt
+    read -rp "请输入选项编号 [0-9]: " opt
     case "$opt" in
         1)
             install_v2bx
@@ -343,7 +318,6 @@ while true; do
             ;;
         2)
             config_wizard
-            systemctl restart V2bX >/dev/null 2>&1 || true
             echo -e "\n按回车键返回主菜单..."
             read -r
             ;;
@@ -369,11 +343,7 @@ while true; do
             run_bbr
             ;;
         8)
-            if [ -f "${INSTALL_DIR}/monitor.sh" ]; then
-                bash "${INSTALL_DIR}/monitor.sh"
-            else
-                bash <(curl -fsSL "https://raw.githubusercontent.com/sbpoem-stack/V2bX-Turbo/main/monitor.sh")
-            fi
+            bash <(curl -fsSL "https://raw.githubusercontent.com/sbpoem-stack/V2bX-Turbo/main/monitor.sh")
             ;;
         9)
             uninstall_v2bx
