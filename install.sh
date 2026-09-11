@@ -206,13 +206,19 @@ config_wizard() {
         TTY_DEV="/dev/stdin"
     fi
 
-    read -rp "1. 请输入面板类型 [可选: NewV2board / V2board / SSpanel / Xboard] (默认: Xboard): " api_host_type < ${TTY_DEV}
-    api_host_type=${api_host_type:-"Xboard"}
-
-    read -rp "2. 请输入面板网址 (例如: https://my-panel.com): " api_host < ${TTY_DEV}
-    read -rp "3. 请输入面板通信密钥 (API Key / Token): " api_key < ${TTY_DEV}
-    read -rp "4. 请输入节点 ID (Node ID，数字): " node_id < ${TTY_DEV}
+    read -rp "1. 请输入面板网址 (例如: https://api.paopao.cx): " api_host < ${TTY_DEV}
+    read -rp "2. 请输入面板通信密钥 (API Key / Token): " api_key < ${TTY_DEV}
+    read -rp "3. 请输入节点 ID (Node ID，数字): " node_id < ${TTY_DEV}
+    read -rp "4. 请选择节点协议类型 [1: V2ray/VLESS/VMess (默认) / 2: Shadowsocks / 3: Trojan / 4: Hysteria2 / 5: TUIC]: " node_type_choice < ${TTY_DEV}
     read -rp "5. 请选择核心类型 [1: sing-box (推荐) / 2: xray] (默认: 1): " core_choice < ${TTY_DEV}
+
+    case "$node_type_choice" in
+        2) node_type="shadowsocks" ;;
+        3) node_type="trojan" ;;
+        4) node_type="hysteria2" ;;
+        5) node_type="tuic" ;;
+        *) node_type="v2ray" ;;
+    esac
     
     if [[ "$core_choice" == "2" ]]; then
         core_type="xray"
@@ -222,35 +228,36 @@ config_wizard() {
 
     cat > "${CONFIG_DIR}/config.json" << EOF
 {
-  "LogConfig": {
+  "Log": {
     "Level": "info",
     "Output": ""
   },
-  "CoresConfig": {
-    "Type": "${core_type}"
-  },
-  "NodeConfig": [
+  "Cores": [
+    {
+      "Type": "${core_type}",
+      "Log": {
+        "Level": "info",
+        "Timestamp": true
+      }
+    }
+  ],
+  "Nodes": [
     {
       "Core": "${core_type}",
       "ApiHost": "${api_host}",
       "ApiKey": "${api_key}",
       "NodeID": ${node_id:-1},
-      "NodeType": "V2ray",
+      "NodeType": "${node_type}",
       "Timeout": 30,
-      "TrafficFormat": "json",
-      "ApiConfig": {
-        "APIHost": "${api_host}",
-        "Key": "${api_key}",
-        "NodeID": ${node_id:-1},
-        "NodeType": "V2ray",
-        "Timeout": 30,
-        "RuleListPath": ""
-      }
+      "ListenIP": "0.0.0.0",
+      "SendIP": "0.0.0.0",
+      "TCPFastOpen": true,
+      "SniffEnabled": true
     }
   ]
 }
 EOF
-    echo -e "${GREEN}[✓] 配置文件已生成: ${CONFIG_DIR}/config.json${PLAIN}"
+    echo -e "${GREEN}[✓] 标准配置文件已生成: ${CONFIG_DIR}/config.json${PLAIN}"
 }
 
 run_bbr() {
