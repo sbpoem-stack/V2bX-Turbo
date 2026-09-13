@@ -275,7 +275,11 @@ EOF
 }
 
 run_bbr() {
-    bash <(curl -fsSL "https://raw.githubusercontent.com/sbpoem-stack/bbr-turbo/main/bbr_turbo.sh")
+    if [ -f "${INSTALL_DIR}/bbr_turbo.sh" ]; then
+        bash "${INSTALL_DIR}/bbr_turbo.sh"
+    else
+        bash <(curl -fsSL "https://raw.githubusercontent.com/sbpoem-stack/V2bX-Turbo/main/bbr_turbo.sh")
+    fi
 }
 
 uninstall_v2bx() {

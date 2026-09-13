@@ -17,7 +17,7 @@ var bbrCommand = cobra.Command{
 		if _, err := os.Stat("/usr/local/V2bX/bbr_turbo.sh"); err == nil {
 			exec.RunCommandStd("bash", "/usr/local/V2bX/bbr_turbo.sh")
 		} else {
-			exec.RunCommandStd("bash", "-c", "curl -fsSL https://raw.githubusercontent.com/sbpoem-stack/bbr-turbo/main/bbr_turbo.sh | bash")
+			exec.RunCommandStd("bash", "-c", "curl -fsSL https://raw.githubusercontent.com/sbpoem-stack/V2bX-Turbo/main/bbr_turbo.sh | bash")
 		}
 	},
 }
