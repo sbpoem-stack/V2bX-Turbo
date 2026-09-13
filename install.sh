@@ -224,50 +224,44 @@ config_wizard() {
         return
     fi
 
-    echo -e "\n${BOLD}${PURPLE}====================================================================${PLAIN}"
-    echo -e "${BOLD}${PURPLE}                 智能节点对接配置向导                               ${PLAIN}"
-    echo -e "${BOLD}${PURPLE}====================================================================${PLAIN}"
+    echo -e "\n${CYAN}====================================================================${PLAIN}"
+    echo -e "${BOLD}${PURPLE}                 节点对接配置向导                                   ${PLAIN}"
+    echo -e "${CYAN}====================================================================${PLAIN}"
 
-    echo -e "\n${CYAN}[1/3] 请输入面板网址 (例如: https://api.paopao.cx):${PLAIN}"
+    echo -e "\n${GREEN}[1/4] 请输入面板网址 (例如: https://api.paopao.cx):${PLAIN}"
     read -r api_host
     api_host=${api_host:-"https://api.paopao.cx"}
     api_host="${api_host%/}"
 
-    echo -e "\n${CYAN}[2/3] 请输入面板通信密钥 (API Key / Token):${PLAIN}"
+    echo -e "\n${GREEN}[2/4] 请输入面板通信密钥 (API Key / Token):${PLAIN}"
     read -r api_key
 
-    echo -e "\n${CYAN}[3/3] 请输入节点 ID (Node ID，数字):${PLAIN}"
+    echo -e "\n${GREEN}[3/4] 请输入节点 ID (Node ID，数字):${PLAIN}"
     read -r node_id
-    node_id=${node_id:-59}
+    node_id=${node_id:-2}
 
-    # 执行智能探测 (直接写入全局变量 GLOBAL_NODE_TYPE)
-    detect_node_type "${api_host}" "${api_key}" "${node_id}"
-    local node_type="${GLOBAL_NODE_TYPE}"
-
-    if [ "$node_type" == "unknown" ] || [ -z "$node_type" ]; then
-        echo -e "\n${CYAN}[*] 未能从面板自动探测到协议，请手动选择面板中的节点协议类型:${PLAIN}"
-        echo -e "  1. VLESS / AnyTLS (推荐)"
-        echo -e "  2. VMess (V2ray)"
-        echo -e "  3. Trojan"
-        echo -e "  4. Shadowsocks"
-        echo -e "  5. Hysteria 2"
-        echo -e "  6. TUIC"
-        echo -e "请输入协议编号 [1-6] (默认: 1):"
-        read -r proto_choice
-        case "$proto_choice" in
-            2) node_type="v2ray" ;;
-            3) node_type="trojan" ;;
-            4) node_type="shadowsocks" ;;
-            5) node_type="hysteria2" ;;
-            6) node_type="tuic" ;;
-            *) node_type="vless" ;;
-        esac
-        echo -e "${GREEN}[OK] 已选择协议类型: ${BOLD}${node_type}${PLAIN}"
-    fi
+    echo -e "\n${GREEN}[4/4] 请选择面板中的节点协议类型:${PLAIN}"
+    echo -e "  1. AnyTLS / VLESS (推荐，包含 Reality / Vision)"
+    echo -e "  2. VMess (V2ray)"
+    echo -e "  3. Trojan"
+    echo -e "  4. Shadowsocks"
+    echo -e "  5. Hysteria 2"
+    echo -e "  6. TUIC"
+    echo -e "请输入编号 [1-6] (默认: 1):"
+    read -r proto_choice
+    case "$proto_choice" in
+        2) node_type="v2ray" ;;
+        3) node_type="trojan" ;;
+        4) node_type="shadowsocks" ;;
+        5) node_type="hysteria2" ;;
+        6) node_type="tuic" ;;
+        *) node_type="vless" ;;
+    esac
+    echo -e "${GREEN}[OK] 已选择协议类型: ${BOLD}${CYAN}${node_type}${PLAIN}"
 
     local core_type="sing"
 
-    echo -e "${YELLOW}[*] 正在自动生成全套极限优化配置文件...${PLAIN}"
+    echo -e "\n${YELLOW}[*] 正在自动生成全套极限优化配置文件...${PLAIN}"
     mkdir -p "${CONFIG_DIR}"
     cat > "${CONFIG_DIR}/config.json" << EOF
 {
