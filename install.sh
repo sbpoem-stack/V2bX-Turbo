@@ -192,7 +192,7 @@ detect_node_type() {
     
     echo -e "${YELLOW}[*] 正在连接面板 API 智能探测节点信息...${PLAIN}"
     
-    local types=("vless" "v2ray" "shadowsocks" "trojan" "hysteria2" "hysteria" "tuic")
+    local types=("anytls" "vless" "v2ray" "shadowsocks" "trojan" "hysteria2" "hysteria" "tuic")
     GLOBAL_NODE_TYPE=""
 
     for t in "${types[@]}"; do
@@ -241,21 +241,24 @@ config_wizard() {
     node_id=${node_id:-2}
 
     echo -e "\n${GREEN}[4/4] 请选择面板中的节点协议类型:${PLAIN}"
-    echo -e "  1. AnyTLS / VLESS (推荐，包含 Reality / Vision)"
-    echo -e "  2. VMess (V2ray)"
-    echo -e "  3. Trojan"
-    echo -e "  4. Shadowsocks"
-    echo -e "  5. Hysteria 2"
-    echo -e "  6. TUIC"
-    echo -e "请输入编号 [1-6] (默认: 1):"
+    echo -e "  1. AnyTLS"
+    echo -e "  2. VLESS (Reality / Vision)"
+    echo -e "  3. VMess (V2ray)"
+    echo -e "  4. Trojan"
+    echo -e "  5. Shadowsocks"
+    echo -e "  6. Hysteria 2"
+    echo -e "  7. TUIC"
+    echo -e "请输入编号 [1-7] (默认: 1):"
     read -r proto_choice
     case "$proto_choice" in
-        2) node_type="v2ray" ;;
-        3) node_type="trojan" ;;
-        4) node_type="shadowsocks" ;;
-        5) node_type="hysteria2" ;;
-        6) node_type="tuic" ;;
-        *) node_type="vless" ;;
+        1) node_type="anytls" ;;
+        2) node_type="vless" ;;
+        3) node_type="v2ray" ;;
+        4) node_type="trojan" ;;
+        5) node_type="shadowsocks" ;;
+        6) node_type="hysteria2" ;;
+        7) node_type="tuic" ;;
+        *) node_type="anytls" ;;
     esac
     echo -e "${GREEN}[OK] 已选择协议类型: ${BOLD}${CYAN}${node_type}${PLAIN}"
 
