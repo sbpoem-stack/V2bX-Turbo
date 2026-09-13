@@ -177,35 +177,35 @@ EOF
     echo -e "${GREEN}====================================================================${PLAIN}"
 }
 
-auto_detect_node() {
+GLOBAL_NODE_TYPE="v2ray"
+
+detect_node_type() {
     local host="$1"
     local key="$2"
     local id="$3"
     
-    echo -e "${YELLOW}[*] 正在连接面板 API 智能探测节点信息...${PLAIN}" >&2
+    echo -e "${YELLOW}[*] 正在连接面板 API 智能探测节点信息...${PLAIN}"
     
     local types=("vless" "v2ray" "shadowsocks" "trojan" "hysteria2" "hysteria" "tuic")
-    local detected_type=""
+    GLOBAL_NODE_TYPE=""
 
     for t in "${types[@]}"; do
+        local resp
         resp=$(curl -s -m 4 "${host}/api/v1/server/UniProxy/config?node_id=${id}&node_type=${t}&token=${key}" -H "Token: ${key}" 2>/dev/null)
         if echo "$resp" | grep -q '"server_port"\|"port"\|"tls"\|"network"\|"routes"'; then
-            detected_type="$t"
-            echo -e "${GREEN}[OK] 智能识别成功！节点协议类型为: ${BOLD}${CYAN}${t}${PLAIN}" >&2
+            GLOBAL_NODE_TYPE="$t"
+            echo -e "${GREEN}[OK] 智能识别成功！节点协议类型为: ${BOLD}${CYAN}${t}${PLAIN}"
             break
         elif echo "$resp" | grep -q "Invalid token"; then
-            echo -e "${RED}[ERROR] 通信密钥 (Token) 错误，面板拒绝访问！${PLAIN}" >&2
+            echo -e "${RED}[ERROR] 通信密钥 (Token) 错误，面板拒绝访问！${PLAIN}"
             break
         fi
     done
 
-    if [ -z "$detected_type" ]; then
-        echo -e "${YELLOW}[!] 面板未能返回明确协议标识，自动启用通用高性能模式 (v2ray/vless)。${PLAIN}" >&2
-        detected_type="v2ray"
+    if [ -z "$GLOBAL_NODE_TYPE" ]; then
+        echo -e "${YELLOW}[!] 面板未能返回明确协议标识，自动启用通用高性能模式 (v2ray/vless)。${PLAIN}"
+        GLOBAL_NODE_TYPE="v2ray"
     fi
-
-    # 只向 stdout 返回纯净的协议名称
-    printf "%s" "$detected_type"
 }
 
 config_wizard() {
@@ -235,9 +235,10 @@ config_wizard() {
     read -r node_id
     node_id=${node_id:-59}
 
-    # 自动探测并补全信息
-    node_type=$(auto_detect_node "${api_host}" "${api_key}" "${node_id}")
-    core_type="sing"
+    # 执行智能探测 (直接写入全局变量 GLOBAL_NODE_TYPE)
+    detect_node_type "${api_host}" "${api_key}" "${node_id}"
+    local node_type="${GLOBAL_NODE_TYPE}"
+    local core_type="sing"
 
     echo -e "${YELLOW}[*] 正在自动生成全套极限优化配置文件...${PLAIN}"
     mkdir -p "${CONFIG_DIR}"
@@ -282,7 +283,8 @@ EOF
         echo -e "${CYAN}   - 协议类型: ${BOLD}${node_type}${PLAIN} | 核心: ${BOLD}sing-box (BBR Turbo 加速)${PLAIN}"
         echo -e "${GREEN}====================================================================${PLAIN}"
     else
-        echo -e "${RED}[ERROR] 节点启动异常，请使用 v2bx log 查看具体日志。${PLAIN}"
+        echo -e "${RED}[ERROR] 节点启动异常，正在输出错误日志:${PLAIN}"
+        journalctl -u V2bX.service -n 10 --no-pager
     fi
 }
 
