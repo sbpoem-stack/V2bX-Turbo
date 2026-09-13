@@ -162,11 +162,17 @@ root hard nproc 524288
 EOF
     echo -e "${GREEN}[OK] BBR Turbo 极限网络参数已成功注入！${PLAIN}"
 
+    # 清理损坏的旧配置文件（若包含 \x1b 则强制重新生成）
+    if [ -f "${CONFIG_DIR}/config.json" ] && grep -q $'\x1b' "${CONFIG_DIR}/config.json" 2>/dev/null; then
+        echo -e "${YELLOW}[!] 检测到旧配置文件存在转义乱码，正在自动重置...${PLAIN}"
+        rm -f "${CONFIG_DIR}/config.json"
+    fi
+
     # 引导智能配置向导
     if [ ! -f "${CONFIG_DIR}/config.json" ]; then
         config_wizard
     else
-        echo -e "${GREEN}[OK] 检测到已有配置文件: ${CONFIG_DIR}/config.json，保持不变。${PLAIN}"
+        echo -e "${GREEN}[OK] 检测到已有有效配置文件: ${CONFIG_DIR}/config.json${PLAIN}"
     fi
 
     systemctl restart V2bX >/dev/null 2>&1 || true
