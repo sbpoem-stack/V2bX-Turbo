@@ -245,14 +245,14 @@ config_wizard() {
     local node_type="${GLOBAL_NODE_TYPE}"
 
     if [ "$node_type" == "unknown" ] || [ -z "$node_type" ]; then
-        echo -e "\n${CYAN}未能自动探测到该节点协议，请选择面板中该节点的协议类型:${PLAIN}"
-        echo -e "  1. VLESS (推荐)"
+        echo -e "\n${CYAN}[*] 未能从面板自动探测到协议，请手动选择面板中的节点协议类型:${PLAIN}"
+        echo -e "  1. VLESS / AnyTLS (推荐)"
         echo -e "  2. VMess (V2ray)"
         echo -e "  3. Trojan"
         echo -e "  4. Shadowsocks"
         echo -e "  5. Hysteria 2"
         echo -e "  6. TUIC"
-        echo -e "请输入编号 [1-6] (默认: 1):"
+        echo -e "请输入协议编号 [1-6] (默认: 1):"
         read -r proto_choice
         case "$proto_choice" in
             2) node_type="v2ray" ;;
@@ -262,6 +262,7 @@ config_wizard() {
             6) node_type="tuic" ;;
             *) node_type="vless" ;;
         esac
+        echo -e "${GREEN}[OK] 已选择协议类型: ${BOLD}${node_type}${PLAIN}"
     fi
 
     local core_type="sing"
