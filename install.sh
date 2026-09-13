@@ -208,6 +208,16 @@ auto_detect_node() {
 }
 
 config_wizard() {
+    # 确保安装目录与配置目录存在
+    mkdir -p "${CONFIG_DIR}" "${INSTALL_DIR}"
+
+    # 如果尚未安装核心程序，自动先执行安装
+    if [ ! -f "${INSTALL_DIR}/V2bX" ]; then
+        echo -e "${YELLOW}[*] 检测到系统尚未安装 V2bX-Turbo，正在为您自动预安装核心程序...${PLAIN}"
+        install_v2bx
+        return
+    fi
+
     echo -e "\n${BOLD}${PURPLE}====================================================================${PLAIN}"
     echo -e "${BOLD}${PURPLE}                 智能节点对接配置向导                               ${PLAIN}"
     echo -e "${BOLD}${PURPLE}====================================================================${PLAIN}"
@@ -229,6 +239,7 @@ config_wizard() {
     core_type="sing"
 
     echo -e "${YELLOW}[*] 正在自动生成全套极限优化配置文件...${PLAIN}"
+    mkdir -p "${CONFIG_DIR}"
     cat > "${CONFIG_DIR}/config.json" << EOF
 {
   "Log": {
