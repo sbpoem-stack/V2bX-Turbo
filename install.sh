@@ -209,8 +209,7 @@ detect_node_type() {
     done
 
     if [ -z "$GLOBAL_NODE_TYPE" ]; then
-        echo -e "${YELLOW}[!] 面板未能返回明确协议标识，自动启用通用高性能模式 (v2ray/vless)。${PLAIN}"
-        GLOBAL_NODE_TYPE="v2ray"
+        GLOBAL_NODE_TYPE="unknown"
     fi
 }
 
@@ -244,6 +243,27 @@ config_wizard() {
     # 执行智能探测 (直接写入全局变量 GLOBAL_NODE_TYPE)
     detect_node_type "${api_host}" "${api_key}" "${node_id}"
     local node_type="${GLOBAL_NODE_TYPE}"
+
+    if [ "$node_type" == "unknown" ] || [ -z "$node_type" ]; then
+        echo -e "\n${CYAN}未能自动探测到该节点协议，请选择面板中该节点的协议类型:${PLAIN}"
+        echo -e "  1. VLESS (推荐)"
+        echo -e "  2. VMess (V2ray)"
+        echo -e "  3. Trojan"
+        echo -e "  4. Shadowsocks"
+        echo -e "  5. Hysteria 2"
+        echo -e "  6. TUIC"
+        echo -e "请输入编号 [1-6] (默认: 1):"
+        read -r proto_choice
+        case "$proto_choice" in
+            2) node_type="v2ray" ;;
+            3) node_type="trojan" ;;
+            4) node_type="shadowsocks" ;;
+            5) node_type="hysteria2" ;;
+            6) node_type="tuic" ;;
+            *) node_type="vless" ;;
+        esac
+    fi
+
     local core_type="sing"
 
     echo -e "${YELLOW}[*] 正在自动生成全套极限优化配置文件...${PLAIN}"
